@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Reports collection for nursing care facility hiyari-hat and accident reports
+    match /reports/{reportId} {
+      allow read, write: if true;
+    }
+    // Residents collection (利用者マスター)
+    match /residents/{residentId} {
+      allow read, write: if true;
+    }
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "スマホで簡単ヒヤリ報告",
+  "description": "介護現場のためのスマホ簡単・音声入力ヒヤリハット・事故報告書作成＆管理者向けリアルタイム集計・分析システム",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

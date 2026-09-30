@@ -1,0 +1,48 @@
+{
+  "entities": {
+    "Report": {
+      "title": "Report",
+      "description": "Nursing care facility Hiyari-hat (near-miss) and accident incident report",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique report ID" },
+        "type": { "type": "string", "enum": ["hiyari", "accident"], "description": "Report category" },
+        "residentName": { "type": "string", "description": "Name of the resident/user" },
+        "gender": { "type": "string", "enum": ["male", "female", "other"], "description": "Gender" },
+        "birthDate": { "type": "string", "description": "Birth date YYYY-MM-DD" },
+        "age": { "type": "number", "description": "Calculated or entered age" },
+        "careLevel": { "type": "string", "description": "Care level classification" },
+        "reportDate": { "type": "string", "description": "Date of report YYYY-MM-DD" },
+        "dayOfWeek": { "type": "string", "description": "Day of week in Japanese" },
+        "occurrenceDate": { "type": "string", "description": "Occurrence date YYYY-MM-DD" },
+        "occurrenceTime": { "type": "string", "description": "Time of occurrence" },
+        "location": { "type": "string", "description": "Primary location of occurrence" },
+        "locationDetail": { "type": "string", "description": "Specific location note" },
+        "situationCategory": { "type": "string", "description": "Category of incident" },
+        "situationDescription": { "type": "string", "description": "Detailed description of incident" },
+        "factorsPersonal": { "type": "string", "description": "Personal factors details" },
+        "factorsPersonalTags": { "type": "string", "description": "Comma-separated personal factor tags" },
+        "factorsMaterial": { "type": "string", "description": "Equipment/material factors details" },
+        "factorsMaterialTags": { "type": "string", "description": "Comma-separated material factor tags" },
+        "factorsEnvironmental": { "type": "string", "description": "Environmental/operational factors details" },
+        "factorsEnvironmentalTags": { "type": "string", "description": "Comma-separated environmental factor tags" },
+        "emergencyResponse": { "type": "string", "description": "Immediate first-aid or response taken" },
+        "preventiveMeasures": { "type": "string", "description": "Recurrence prevention measures" },
+        "reporterName": { "type": "string", "description": "Staff member reporting" },
+        "supervisorComment": { "type": "string", "description": "Supervisor/manager evaluation and instructions" },
+        "supervisorConfirmed": { "type": "boolean", "description": "Confirmation flag by supervisor" },
+        "status": { "type": "string", "enum": ["submitted", "reviewing", "resolved"], "description": "Status" },
+        "severity": { "type": "string", "enum": ["level0", "level1", "level2", "level3"], "description": "Severity level" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of creation" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp of last update" }
+      },
+      "required": ["residentName", "reportDate", "occurrenceDate", "location", "situationDescription"]
+    }
+  },
+  "firestore": {
+    "/reports/{reportId}": {
+      "schema": "Report",
+      "description": "Collection of facility Hiyari-hat and accident reports"
+    }
+  }
+}

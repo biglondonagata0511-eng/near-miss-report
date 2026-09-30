@@ -11,12 +11,15 @@ import {
 import { db, reportsCollection, initAuth } from './firebase';
 import { Report, Resident } from '../types/report';
 import { INITIAL_SAMPLE_REPORTS } from './mockData';
-import { INITIAL_RESIDENTS } from './mockResidents';
+import { INITIAL_RESIDENTS, LEGACY_DUMMY_RESIDENT_IDS } from './mockResidents';
 
 const LOCAL_STORAGE_REPORTS_KEY = 'hiyari_reports_data_v2';
 const LOCAL_STORAGE_RESIDENTS_KEY = 'hiyari_residents_data_v2';
 const ADMIN_PASSWORD_KEY = 'hiyari_admin_password_v1';
 const DEFAULT_PASSWORD = '1234';
+
+// Rate limiter / Deduplication guard to protect Firestore free tier (50,000 quota limit)
+const recentSaves = new Map<string, number>();
 
 export const residentsCollection = collection(db, 'residents');
 
@@ -48,26 +51,33 @@ export function getLocalResidents(): Resident[] {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_RESIDENTS_KEY);
     if (!raw) {
-      localStorage.setItem(LOCAL_STORAGE_RESIDENTS_KEY, JSON.stringify(INITIAL_RESIDENTS));
-      return INITIAL_RESIDENTS;
+      return [];
     }
-    return JSON.parse(raw);
+    const parsed: Resident[] = JSON.parse(raw);
+    // ダミー利用者（res-001〜res-010）を確実に除外
+    const cleaned = parsed.filter((r) => !LEGACY_DUMMY_RESIDENT_IDS.includes(r.id));
+    if (cleaned.length !== parsed.length) {
+      saveLocalResidents(cleaned);
+    }
+    return cleaned;
   } catch (e) {
     console.error('Failed to parse local residents', e);
-    return INITIAL_RESIDENTS;
+    return [];
   }
 }
 
 export function saveLocalResidents(residents: Resident[]) {
   try {
-    localStorage.setItem(LOCAL_STORAGE_RESIDENTS_KEY, JSON.stringify(residents));
+    const filtered = residents.filter((r) => !LEGACY_DUMMY_RESIDENT_IDS.includes(r.id));
+    localStorage.setItem(LOCAL_STORAGE_RESIDENTS_KEY, JSON.stringify(filtered));
   } catch (e) {
     console.error('Failed to save residents to local storage', e);
   }
 }
 
 /**
- * Real-time listener for Residents collection
+ * Real-time listener for Residents collection.
+ * 無料枠保護のため、自動シード（無駄な書き込みループ）は行いません。
  */
 export function subscribeResidents(callback: (residents: Resident[]) => void): () => void {
   initAuth();
@@ -80,22 +90,17 @@ export function subscribeResidents(callback: (residents: Resident[]) => void): (
     unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        if (!snapshot.empty) {
-          const list: Resident[] = [];
-          snapshot.forEach((docSnap) => {
-            list.push({ ...(docSnap.data() as Resident), id: docSnap.id });
-          });
-          saveLocalResidents(list);
-          callback(list);
-        } else {
-          // Seed Firestore with initial residents
-          cached.forEach((item) => {
-            setDoc(doc(db, 'residents', item.id), item).catch((err) =>
-              console.warn('Initial resident seeding note:', err)
-            );
-          });
-          callback(cached);
-        }
+        const list: Resident[] = [];
+        snapshot.forEach((docSnap) => {
+          // もし過去のダミー利用者が残っていればFirestoreからも削除
+          if (LEGACY_DUMMY_RESIDENT_IDS.includes(docSnap.id)) {
+            deleteDoc(doc(db, 'residents', docSnap.id)).catch(() => {});
+            return;
+          }
+          list.push({ ...(docSnap.data() as Resident), id: docSnap.id });
+        });
+        saveLocalResidents(list);
+        callback(list);
       },
       (error) => {
         console.warn('Residents snapshot fallback to local:', error.message);
@@ -195,6 +200,7 @@ export function verifyAdminPassword(input: string): boolean {
 
 /**
  * Real-time listener for reports.
+ * 無料枠保護のため、自動シード書き込みループを防止します。
  */
 export function subscribeReports(callback: (reports: Report[]) => void): () => void {
   initAuth();
@@ -218,11 +224,7 @@ export function subscribeReports(callback: (reports: Report[]) => void): () => v
           saveLocalReports(remoteReports);
           callback(remoteReports);
         } else {
-          cached.forEach((item) => {
-            setDoc(doc(db, 'reports', item.id), item).catch((err) =>
-              console.warn('Initial report seeding note:', err)
-            );
-          });
+          // 空の場合は勝手なダミー書き込みを行わずそのまま空を返却
           callback(cached);
         }
       },
@@ -242,10 +244,19 @@ export function subscribeReports(callback: (reports: Report[]) => void): () => v
 }
 
 /**
- * Save / Add new report
+ * Save / Add new report.
+ * 無料枠保護のため、短時間内の同一ID連続送信（二重クリック等）を防止します。
  */
 export async function saveReport(report: Report): Promise<{ success: boolean; error?: string }> {
   try {
+    // 2秒以内の同一レポート連続保存をガード（Firestore書き込み回数の浪費防止）
+    const now = Date.now();
+    const lastSaved = recentSaves.get(report.id) || 0;
+    if (now - lastSaved < 2000) {
+      return { success: true };
+    }
+    recentSaves.set(report.id, now);
+
     const current = getLocalReports();
     const existingIndex = current.findIndex((r) => r.id === report.id);
     let updated: Report[];
@@ -266,6 +277,26 @@ export async function saveReport(report: Report): Promise<{ success: boolean; er
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err?.message || '保存に失敗しました' };
+  }
+}
+
+/**
+ * 利用者マスターを完全にクリア（ダミーおよび全利用者データの削除）
+ */
+export async function clearAllResidents(): Promise<boolean> {
+  try {
+    const current = getLocalResidents();
+    saveLocalResidents([]);
+    for (const r of current) {
+      deleteDoc(doc(db, 'residents', r.id)).catch(() => {});
+    }
+    for (const dummyId of LEGACY_DUMMY_RESIDENT_IDS) {
+      deleteDoc(doc(db, 'residents', dummyId)).catch(() => {});
+    }
+    return true;
+  } catch (e) {
+    console.error('Failed to clear residents', e);
+    return false;
   }
 }
 

@@ -16,7 +16,8 @@ import {
   Search,
   ChevronDown,
   ChevronUp,
-  FileText
+  FileText,
+  X
 } from 'lucide-react';
 import { PRESET_TEMPLATES, PresetTemplate } from '../../lib/presetTemplates';
 import { 
@@ -380,10 +381,10 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
                 利用者氏名 <span className="text-red-500">*必須</span>
               </label>
 
-              {/* 氏名幅計測用の非表示スパン (報告日と同じ大きさ・現在の2倍のフォントサイズで正確に測定) */}
+              {/* 氏名幅計測用の非表示スパン (報告日と同じ大きさ・1pt調整済みフォントサイズで正確に測定) */}
               <span
                 ref={nameMeasureRef}
-                className="absolute -left-[9999px] top-0 invisible whitespace-pre text-base sm:text-lg font-bold pointer-events-none select-none font-meiryo-num"
+                className="absolute -left-[9999px] top-0 invisible whitespace-pre text-[15px] sm:text-base font-bold pointer-events-none select-none font-meiryo-num"
                 aria-hidden="true"
               >
                 {residentInput || ''}
@@ -396,7 +397,7 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
                     className="relative h-11 flex items-center bg-white rounded-xl border border-slate-300 px-3 focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all cursor-text overflow-hidden"
                     onClick={() => residentInputRef.current?.focus()}
                   >
-                    <div className="flex items-center flex-1 min-w-0 pr-6">
+                    <div className="flex items-center flex-1 min-w-0 pr-12">
                       <input
                         ref={residentInputRef}
                         type="text"
@@ -415,19 +416,35 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
                         required
                         style={{
                           width: residentInput
-                            ? `${nameWidth ? nameWidth + 6 : residentInput.length * 20 + 6}px`
+                            ? `${nameWidth ? nameWidth + 6 : residentInput.length * 18 + 6}px`
                             : '100%',
                           maxWidth: 'calc(100% - 2.6rem)',
                         }}
-                        className="h-full bg-transparent border-none outline-none text-base sm:text-lg font-bold text-slate-950 placeholder:text-slate-400 placeholder:font-normal placeholder:text-xs shrink-0"
+                        className="h-full bg-transparent border-none outline-none text-[15px] sm:text-base font-bold text-slate-950 placeholder:text-slate-400 placeholder:font-normal placeholder:text-xs shrink-0"
                       />
-                      {/* 名前入力ボックス内で、名前の後ろに約3文字分空けて「様」を自動表示 (報告日と同等の2倍サイズ) */}
+                      {/* 名前入力ボックス内で、名前の後ろに約3文字分空けて「様」を自動表示 */}
                       {residentInput.trim() && (
-                        <span className="text-base sm:text-lg font-bold text-slate-800 pl-3.5 select-none pointer-events-none shrink-0 tracking-wider">
+                        <span className="text-[15px] sm:text-base font-bold text-slate-800 pl-3.5 select-none pointer-events-none shrink-0 tracking-wider">
                           様
                         </span>
                       )}
                     </div>
+
+                    {/* 手入力ボックスのクリアボタン (小さく目立たない設計) */}
+                    {residentInput ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setResidentInput('');
+                          setSelectedResident(null);
+                        }}
+                        className="absolute right-7 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 p-1 transition-colors cursor-pointer"
+                        title="氏名を消去"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    ) : null}
 
                     <button
                       type="button"
@@ -435,7 +452,7 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
                         e.stopPropagation();
                         setIsDropdownOpen(!isDropdownOpen);
                       }}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 p-1 hover:text-slate-600"
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 p-1 hover:text-slate-600 cursor-pointer"
                       title="候補一覧を表示"
                     >
                       <ChevronDown className="w-4 h-4" />
@@ -645,7 +662,7 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
                       setAge(val);
                     }}
                     placeholder="未入力可"
-                    className="w-full h-11 px-3 text-center rounded-xl border border-slate-300 bg-white text-base sm:text-lg font-bold text-slate-950 font-meiryo-num focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder:text-slate-400 placeholder:font-normal placeholder:text-xs placeholder:text-center"
+                    className="w-full h-11 px-3 text-center rounded-xl border border-slate-300 bg-white text-[15px] sm:text-base font-bold text-slate-950 font-meiryo-num focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder:text-slate-400 placeholder:font-normal placeholder:text-xs placeholder:text-center"
                   />
                   <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-bold text-slate-500 pointer-events-none">
                     歳
@@ -654,7 +671,7 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
               </div>
             </div>
 
-            {/* 3. 報告日 と 発生日: 同じ行の高さ・同じスタイルで配置し、どちらも曜日を表示 (数字はMeiryo UIで2pt大きめ) */}
+            {/* 3. 報告日 と 発生日: 同じ行の高さ・同じスタイルで配置し、どちらも曜日を表示 (数字サイズ1PT調整) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {/* 報告日 */}
               <div>
@@ -663,7 +680,7 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
                   <span>報告日</span>
                 </label>
                 <div className="relative h-11 flex items-center bg-white rounded-xl border border-slate-300 px-3 hover:border-slate-400 transition-colors">
-                  <span className="text-base sm:text-lg font-bold text-slate-950 flex-1 tracking-wide font-meiryo-num select-none">
+                  <span className="text-[15px] sm:text-base font-bold text-slate-950 flex-1 tracking-wide font-meiryo-num select-none">
                     {formatDisplayDateWithDay(reportDate)}
                   </span>
                   <div className="relative flex items-center justify-center w-8 h-8 rounded-lg hover:bg-amber-50 text-amber-600 transition-colors shrink-0">
@@ -687,7 +704,7 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
                   <span>発生・発見日</span>
                 </label>
                 <div className="relative h-11 flex items-center bg-white rounded-xl border border-slate-300 px-3 hover:border-slate-400 transition-colors">
-                  <span className="text-base sm:text-lg font-bold text-slate-950 flex-1 tracking-wide font-meiryo-num select-none">
+                  <span className="text-[15px] sm:text-base font-bold text-slate-950 flex-1 tracking-wide font-meiryo-num select-none">
                     {formatDisplayDateWithDay(occurrenceDate)}
                   </span>
                   <div className="relative flex items-center justify-center w-8 h-8 rounded-lg hover:bg-amber-50 text-amber-600 transition-colors shrink-0">
@@ -705,21 +722,31 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
               </div>
             </div>
 
-            {/* 4. 発生・発見時刻 & 時間帯区分 (数字はMeiryo UIで2pt大きめ) */}
+            {/* 4. 発生・発見時刻 & 時間帯区分 (数字サイズ1PT調整) */}
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
                 発生・発見時刻 &amp; 時間帯区分
               </label>
               <div className="grid grid-cols-2 gap-2.5">
                 {/* 時刻手入力ボックス (●:●) */}
-                <div>
+                <div className="relative">
                   <input
                     type="text"
                     value={occurrenceTimeOnly}
                     onChange={(e) => setOccurrenceTimeOnly(e.target.value)}
                     placeholder="例: 14:25"
-                    className="w-full h-11 px-3 rounded-xl border border-slate-300 bg-white text-base sm:text-lg font-bold text-slate-950 font-meiryo-num focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder:text-slate-400 placeholder:font-normal placeholder:text-xs"
+                    className="w-full h-11 px-3 pr-8 rounded-xl border border-slate-300 bg-white text-[15px] sm:text-base font-bold text-slate-950 font-meiryo-num focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder:text-slate-400 placeholder:font-normal placeholder:text-xs"
                   />
+                  {occurrenceTimeOnly ? (
+                    <button
+                      type="button"
+                      onClick={() => setOccurrenceTimeOnly('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 p-0.5 transition-colors cursor-pointer"
+                      title="時刻を消去"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  ) : null}
                 </div>
 
                 {/* 時間帯プルダウン */}
@@ -758,13 +785,25 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
                   ))}
                 </select>
 
-                <input
-                  type="text"
-                  value={locationDetail}
-                  onChange={(e) => setLocationDetail(e.target.value)}
-                  placeholder="場所の詳細（例: 201号室トイレ前、ベッド足元、便座付近など）"
-                  className="w-full h-10 px-3 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-amber-500 text-xs placeholder:text-slate-400"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={locationDetail}
+                    onChange={(e) => setLocationDetail(e.target.value)}
+                    placeholder="場所の詳細（例: 201号室トイレ前、ベッド足元、便座付近など）"
+                    className="w-full h-10 px-3 pr-8 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-amber-500 text-xs placeholder:text-slate-400"
+                  />
+                  {locationDetail ? (
+                    <button
+                      type="button"
+                      onClick={() => setLocationDetail('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 p-0.5 transition-colors cursor-pointer"
+                      title="詳細を消去"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  ) : null}
+                </div>
               </div>
             </div>
           </div>
@@ -915,22 +954,35 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
                 <label className="text-xs font-bold text-slate-700">
                   状況の詳細 <span className="text-red-500">*必須</span>
                 </label>
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleToggleVoice('situation', situationDescription, setSituationDescription)
-                  }
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border transition-colors ${
-                    activeSpeechField === 'situation' && isListening
-                      ? 'bg-red-500 text-white animate-pulse'
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  <Mic className="w-3 h-3 text-slate-500" />
-                  <span>
-                    {activeSpeechField === 'situation' && isListening ? '録音中...' : '音声'}
-                  </span>
-                </button>
+                <div className="flex items-center gap-1.5">
+                  {situationDescription ? (
+                    <button
+                      type="button"
+                      onClick={() => setSituationDescription('')}
+                      className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[11px] font-medium border border-slate-200 bg-white text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                      title="内容をクリア"
+                    >
+                      <X className="w-3 h-3 text-slate-400" />
+                      <span>クリア</span>
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleToggleVoice('situation', situationDescription, setSituationDescription)
+                    }
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border transition-colors ${
+                      activeSpeechField === 'situation' && isListening
+                        ? 'bg-red-500 text-white animate-pulse'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Mic className="w-3 h-3 text-slate-500" />
+                    <span>
+                      {activeSpeechField === 'situation' && isListening ? '録音中...' : '音声'}
+                    </span>
+                  </button>
+                </div>
               </div>
 
               <textarea
@@ -978,20 +1030,33 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
                 </span>
                 本人・職員要因
               </span>
-              <button
-                type="button"
-                onClick={() =>
-                  handleToggleVoice('factorPersonal', personalDetail, setPersonalDetail)
-                }
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border ${
-                  activeSpeechField === 'factorPersonal' && isListening
-                    ? 'bg-red-500 text-white animate-pulse'
-                    : 'bg-white text-slate-600 border-slate-200'
-                }`}
-              >
-                <Mic className="w-3 h-3" />
-                <span>音声</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                {personalDetail ? (
+                  <button
+                    type="button"
+                    onClick={() => setPersonalDetail('')}
+                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[11px] font-medium border border-slate-200 bg-white text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                    title="入力内容をクリア"
+                  >
+                    <X className="w-3 h-3 text-slate-400" />
+                    <span>クリア</span>
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleToggleVoice('factorPersonal', personalDetail, setPersonalDetail)
+                  }
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border ${
+                    activeSpeechField === 'factorPersonal' && isListening
+                      ? 'bg-red-500 text-white animate-pulse'
+                      : 'bg-white text-slate-600 border-slate-200'
+                  }`}
+                >
+                  <Mic className="w-3 h-3" />
+                  <span>音声</span>
+                </button>
+              </div>
             </div>
             <p className="text-[11px] text-slate-400 mb-2">
               例：体調不良、焦り、確認漏れ、思い込み、不穏・認知症状、コール対応中など
@@ -1035,20 +1100,33 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
                 </span>
                 物的・設備要因
               </span>
-              <button
-                type="button"
-                onClick={() =>
-                  handleToggleVoice('factorMaterial', materialDetail, setMaterialDetail)
-                }
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border ${
-                  activeSpeechField === 'factorMaterial' && isListening
-                    ? 'bg-red-500 text-white animate-pulse'
-                    : 'bg-white text-slate-600 border-slate-200'
-                }`}
-              >
-                <Mic className="w-3 h-3" />
-                <span>音声</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                {materialDetail ? (
+                  <button
+                    type="button"
+                    onClick={() => setMaterialDetail('')}
+                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[11px] font-medium border border-slate-200 bg-white text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                    title="入力内容をクリア"
+                  >
+                    <X className="w-3 h-3 text-slate-400" />
+                    <span>クリア</span>
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleToggleVoice('factorMaterial', materialDetail, setMaterialDetail)
+                  }
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border ${
+                    activeSpeechField === 'factorMaterial' && isListening
+                      ? 'bg-red-500 text-white animate-pulse'
+                      : 'bg-white text-slate-600 border-slate-200'
+                  }`}
+                >
+                  <Mic className="w-3 h-3" />
+                  <span>音声</span>
+                </button>
+              </div>
             </div>
             <p className="text-[11px] text-slate-400 mb-2">
               例：車椅子の整備不良、タイヤ空気圧、ブレーキ緩み、照明の薄暗さ、手すりの高さなど
@@ -1093,20 +1171,33 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
                 </span>
                 環境・運用要因
               </span>
-              <button
-                type="button"
-                onClick={() =>
-                  handleToggleVoice('factorEnv', environmentalDetail, setEnvironmentalDetail)
-                }
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border ${
-                  activeSpeechField === 'factorEnv' && isListening
-                    ? 'bg-red-500 text-white animate-pulse'
-                    : 'bg-white text-slate-600 border-slate-200'
-                }`}
-              >
-                <Mic className="w-3 h-3" />
-                <span>音声</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                {environmentalDetail ? (
+                  <button
+                    type="button"
+                    onClick={() => setEnvironmentalDetail('')}
+                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[11px] font-medium border border-slate-200 bg-white text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                    title="入力内容をクリア"
+                  >
+                    <X className="w-3 h-3 text-slate-400" />
+                    <span>クリア</span>
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleToggleVoice('factorEnv', environmentalDetail, setEnvironmentalDetail)
+                  }
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border ${
+                    activeSpeechField === 'factorEnv' && isListening
+                      ? 'bg-red-500 text-white animate-pulse'
+                      : 'bg-white text-slate-600 border-slate-200'
+                  }`}
+                >
+                  <Mic className="w-3 h-3" />
+                  <span>音声</span>
+                </button>
+              </div>
             </div>
             <p className="text-[11px] text-slate-400 mb-2">
               例：床の濡れ・ワックス、マットセンサー位置、ドアの死角、連絡ノート記入漏れなど
@@ -1159,20 +1250,33 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
               <label className="text-xs font-bold text-slate-700">
                 応急処置・直後の対応
               </label>
-              <button
-                type="button"
-                onClick={() =>
-                  handleToggleVoice('response', emergencyResponse, setEmergencyResponse)
-                }
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold border ${
-                  activeSpeechField === 'response' && isListening
-                    ? 'bg-red-500 text-white animate-pulse'
-                    : 'bg-slate-50 text-slate-600 border-slate-200'
-                }`}
-              >
-                <Mic className="w-3 h-3" />
-                <span>音声</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                {emergencyResponse ? (
+                  <button
+                    type="button"
+                    onClick={() => setEmergencyResponse('')}
+                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[11px] font-medium border border-slate-200 bg-white text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                    title="入力内容をクリア"
+                  >
+                    <X className="w-3 h-3 text-slate-400" />
+                    <span>クリア</span>
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleToggleVoice('response', emergencyResponse, setEmergencyResponse)
+                  }
+                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold border ${
+                    activeSpeechField === 'response' && isListening
+                      ? 'bg-red-500 text-white animate-pulse'
+                      : 'bg-slate-50 text-slate-600 border-slate-200'
+                  }`}
+                >
+                  <Mic className="w-3 h-3" />
+                  <span>音声</span>
+                </button>
+              </div>
             </div>
             <input
               type="text"
@@ -1189,20 +1293,33 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
               <label className="text-xs font-bold text-slate-700">
                 再発防止策・現場からの改善提案
               </label>
-              <button
-                type="button"
-                onClick={() =>
-                  handleToggleVoice('prev', preventiveMeasures, setPreventiveMeasures)
-                }
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold border ${
-                  activeSpeechField === 'prev' && isListening
-                    ? 'bg-red-500 text-white animate-pulse'
-                    : 'bg-slate-50 text-slate-600 border-slate-200'
-                }`}
-              >
-                <Mic className="w-3 h-3" />
-                <span>音声</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                {preventiveMeasures ? (
+                  <button
+                    type="button"
+                    onClick={() => setPreventiveMeasures('')}
+                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[11px] font-medium border border-slate-200 bg-white text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                    title="入力内容をクリア"
+                  >
+                    <X className="w-3 h-3 text-slate-400" />
+                    <span>クリア</span>
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleToggleVoice('prev', preventiveMeasures, setPreventiveMeasures)
+                  }
+                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold border ${
+                    activeSpeechField === 'prev' && isListening
+                      ? 'bg-red-500 text-white animate-pulse'
+                      : 'bg-slate-50 text-slate-600 border-slate-200'
+                  }`}
+                >
+                  <Mic className="w-3 h-3" />
+                  <span>音声</span>
+                </button>
+              </div>
             </div>
             <textarea
               rows={2}
@@ -1218,13 +1335,25 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
             <label className="block text-xs font-bold text-slate-700 mb-1">
               報告者（職員氏名）
             </label>
-            <input
-              type="text"
-              value={reporterName}
-              onChange={(e) => setReporterName(e.target.value)}
-              placeholder="例：介護職員 佐藤"
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={reporterName}
+                onChange={(e) => setReporterName(e.target.value)}
+                placeholder="例：介護職員 佐藤"
+                className="w-full px-3 py-2 pr-8 rounded-xl border border-slate-300 text-xs"
+              />
+              {reporterName ? (
+                <button
+                  type="button"
+                  onClick={() => setReporterName('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 p-0.5 transition-colors cursor-pointer"
+                  title="氏名を消去"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              ) : null}
+            </div>
           </div>
         </div>
 

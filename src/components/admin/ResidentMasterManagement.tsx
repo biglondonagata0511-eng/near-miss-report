@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { Resident, Gender, CareLevel, CARE_LEVEL_OPTIONS } from '../../types/report';
 import { calculateAgeFromBirthDate } from '../../lib/dateUtils';
-import { bulkSaveResidents, saveResident, deleteResident } from '../../lib/storage';
+import { bulkSaveResidents, saveResident, deleteResident, clearAllResidents } from '../../lib/storage';
 
 interface ResidentMasterManagementProps {
   residents: Resident[];
@@ -210,13 +210,29 @@ export const ResidentMasterManagement: React.FC<ResidentMasterManagementProps> =
         </div>
 
         <div className="flex items-center gap-2">
+          {residents.length > 0 && (
+            <button
+              type="button"
+              onClick={async () => {
+                if (window.confirm('ダミー利用者を含むすべての登録利用者をクリアしますか？\n（本番運用の前にまっさらな状態に初期化します）')) {
+                  await clearAllResidents();
+                  onDataChanged();
+                }
+              }}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold transition-all cursor-pointer"
+              title="ダミーを含む全登録利用者をクリア"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>全件クリア</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={() => {
               setIsPastingBulk(!isPastingBulk);
               setIsAddingSingle(false);
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition-all shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
           >
             <ClipboardPaste className="w-3.5 h-3.5 text-amber-400" />
             <span>Excelコピペ一括登録</span>

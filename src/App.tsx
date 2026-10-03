@@ -26,7 +26,8 @@ import {
   saveReport, 
   deleteReport, 
   getLocalReports,
-  getLocalResidents 
+  getLocalResidents,
+  cleanUpAllLegacyDummyData
 } from './lib/storage';
 import { testConnection } from './lib/firebase';
 import { Header } from './components/common/Header';
@@ -72,9 +73,11 @@ export default function App() {
   const [printModalTitle, setPrintModalTitle] = useState<string>('');
   const [showDataModal, setShowDataModal] = useState<boolean>(false);
 
-  // On initial mount: test connection and subscribe to reports & residents
+  // On initial mount: test connection, cleanup dummy data, and subscribe to reports & residents
   useEffect(() => {
     testConnection();
+    // 過去のダミーデータをFirestoreおよびローカルからクリーンアップ
+    cleanUpAllLegacyDummyData().catch(() => {});
 
     const unsubReports = subscribeReports((updated) => {
       setReports(updated);
@@ -90,14 +93,27 @@ export default function App() {
     };
   }, []);
 
-  // Save / Submit new report
+  // Save / Submit new report (現場スマホおよび管理者PC)
   const handleSaveReport = async (report: Report): Promise<boolean> => {
+    // 1. ローカルStateを即時更新（画面遷移や一覧表示で即座に反映されることを保証）
+    setReports((prev) => {
+      const idx = prev.findIndex((r) => r.id === report.id);
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = report;
+        return next;
+      }
+      return [report, ...prev];
+    });
+
+    // 2. クラウド（Firestore）およびローカルストレージへ保存
     const res = await saveReport(report);
     return res.success;
   };
 
   // Delete report
   const handleDeleteReport = async (reportId: string) => {
+    setReports((prev) => prev.filter((r) => r.id !== reportId));
     await deleteReport(reportId);
   };
 
@@ -180,7 +196,7 @@ export default function App() {
                 }`}
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>新規ヒヤリ入力</span>
+                <span>新規報告（ヒヤリ/事故）</span>
               </button>
               <button
                 type="button"

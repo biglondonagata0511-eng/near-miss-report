@@ -680,7 +680,7 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
                   <span>報告日</span>
                 </label>
                 <div className="relative h-11 flex items-center bg-white rounded-xl border border-slate-300 px-3 hover:border-slate-400 transition-colors">
-                  <span className="text-[15px] sm:text-base font-bold text-slate-950 flex-1 tracking-wide font-meiryo-num select-none">
+                  <span className="text-[13.5px] sm:text-[14.5px] font-bold text-slate-900 flex-1 tracking-wide font-meiryo-num select-none">
                     {formatDisplayDateWithDay(reportDate)}
                   </span>
                   <div className="relative flex items-center justify-center w-8 h-8 rounded-lg hover:bg-amber-50 text-amber-600 transition-colors shrink-0">
@@ -704,7 +704,7 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
                   <span>発生・発見日</span>
                 </label>
                 <div className="relative h-11 flex items-center bg-white rounded-xl border border-slate-300 px-3 hover:border-slate-400 transition-colors">
-                  <span className="text-[15px] sm:text-base font-bold text-slate-950 flex-1 tracking-wide font-meiryo-num select-none">
+                  <span className="text-[13.5px] sm:text-[14.5px] font-bold text-slate-900 flex-1 tracking-wide font-meiryo-num select-none">
                     {formatDisplayDateWithDay(occurrenceDate)}
                   </span>
                   <div className="relative flex items-center justify-center w-8 h-8 rounded-lg hover:bg-amber-50 text-amber-600 transition-colors shrink-0">
@@ -735,7 +735,7 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
                     value={occurrenceTimeOnly}
                     onChange={(e) => setOccurrenceTimeOnly(e.target.value)}
                     placeholder="例: 14:25"
-                    className="w-full h-11 px-3 pr-8 rounded-xl border border-slate-300 bg-white text-[15px] sm:text-base font-bold text-slate-950 font-meiryo-num focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder:text-slate-400 placeholder:font-normal placeholder:text-xs"
+                    className="w-full h-11 px-3 pr-8 rounded-xl border border-slate-300 bg-white text-[13.5px] sm:text-[14.5px] font-bold text-slate-900 font-meiryo-num focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder:text-slate-400 placeholder:font-normal placeholder:text-xs"
                   />
                   {occurrenceTimeOnly ? (
                     <button

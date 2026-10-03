@@ -16,7 +16,9 @@ import {
   exportReportsAsJSON, 
   exportReportsAsCSV, 
   importReportsFromJSON, 
-  resetToSampleData,
+  cleanUpAllLegacyDummyData,
+  clearAllReports,
+  clearAllResidents,
   setAdminPassword,
   verifyAdminPassword,
   getLocalResidents
@@ -73,12 +75,22 @@ export const DataManagementModal: React.FC<DataManagementModalProps> = ({
     }
   };
 
-  const handleResetSample = async () => {
-    if (window.confirm('初期サンプルデータ（報告書＆利用者マスター）にリセットしますか？現在のデータは初期状態に戻ります。')) {
-      await resetToSampleData();
+  const handleClearDummyData = async () => {
+    if (window.confirm('過去のダミー登録事項（ダミー報告書・ダミー利用者）をクラウドおよび端末から全て消去しますか？\n※ご自身で入力された実際の報告データは残ります。')) {
+      setImportStatus('ダミーデータを消去中...');
+      const res = await cleanUpAllLegacyDummyData();
       onDataChanged();
-      setImportStatus('初期サンプルデータを復元しました。');
-      setTimeout(() => setImportStatus(null), 3000);
+      setImportStatus(`ダミー情報を全消去しました（報告書: ${res.reportsRemoved}件、利用者: ${res.residentsRemoved}件を削除）`);
+      setTimeout(() => setImportStatus(null), 3500);
+    }
+  };
+
+  const handleClearAllReports = async () => {
+    if (window.confirm('【確認】すべての報告書（テスト・ダミー含む全データ）を削除しますか？\n※本番運用の初期化として一度すべてクリアにしたい場合のみ実行してください。')) {
+      await clearAllReports();
+      onDataChanged();
+      setImportStatus('すべての報告書データをクリアしました。');
+      setTimeout(() => setImportStatus(null), 3500);
     }
   };
 
@@ -242,16 +254,27 @@ export const DataManagementModal: React.FC<DataManagementModalProps> = ({
             </form>
           </div>
 
-          {/* Section 4: Reset Sample Data */}
-          <div className="pt-1 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={handleResetSample}
-              className="text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1 font-medium"
-            >
-              <RefreshCw className="w-3 h-3" />
-              <span>デモ用サンプルデータを再読み込み</span>
-            </button>
+          {/* Section 4: Data Cleanup (本番公開用データクリア) */}
+          <div className="pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleClearDummyData}
+                className="text-xs text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold transition-colors cursor-pointer"
+                title="初期作成時のダミー報告書とダミー利用者を消去"
+              >
+                <RefreshCw className="w-3 h-3" />
+                <span>ダミー登録事項を全消去</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleClearAllReports}
+                className="text-xs text-slate-500 hover:text-red-600 px-2 py-1.5 rounded-lg font-medium transition-colors cursor-pointer"
+                title="報告書を全件クリア"
+              >
+                <span>全報告クリア</span>
+              </button>
+            </div>
             <button
               type="button"
               onClick={onClose}

@@ -15,9 +15,16 @@ import {
   MapPin, 
   User,
   ArrowUpDown,
-  FolderDown
+  FolderDown,
+  Building2
 } from 'lucide-react';
-import { Report, LOCATION_OPTIONS } from '../../types/report';
+import { 
+  Report, 
+  LOCATION_OPTIONS, 
+  FACILITY_BRANCH_OPTIONS,
+  getFacilityShortName,
+  getFacilityBadgeStyle
+} from '../../types/report';
 import { exportReportsAsCSV } from '../../lib/storage';
 
 interface ReportTableProps {
@@ -37,6 +44,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({
 }) => {
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFacility, setSelectedFacility] = useState<string>('all');
   const [selectedYearMonth, setSelectedYearMonth] = useState<string>('all');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
@@ -61,13 +69,22 @@ export const ReportTable: React.FC<ReportTableProps> = ({
   const filteredReports = useMemo(() => {
     return reports
       .filter((r) => {
+        // Facility branch
+        if (selectedFacility !== 'all') {
+          const branch = r.facilityBranch || FACILITY_BRANCH_OPTIONS[0];
+          if (branch !== selectedFacility) return false;
+        }
+
         // Search term
         if (searchTerm) {
           const t = searchTerm.toLowerCase();
+          const branch = (r.facilityBranch || '').toLowerCase();
           const match =
             r.residentName.toLowerCase().includes(t) ||
+            branch.includes(t) ||
             r.situationDescription.toLowerCase().includes(t) ||
             r.location.toLowerCase().includes(t) ||
+            (r.locationDetail && r.locationDetail.toLowerCase().includes(t)) ||
             r.reporterName.toLowerCase().includes(t) ||
             r.situationCategory.toLowerCase().includes(t);
           if (!match) return false;
@@ -104,6 +121,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({
       });
   }, [
     reports,
+    selectedFacility,
     searchTerm,
     selectedYearMonth,
     startDate,
@@ -117,11 +135,12 @@ export const ReportTable: React.FC<ReportTableProps> = ({
 
   const filterSummaryLabel = useMemo(() => {
     const parts = [];
+    if (selectedFacility !== 'all') parts.push(`【${selectedFacility}】`);
     if (selectedYearMonth !== 'all') parts.push(`${selectedYearMonth}`);
     if (startDate || endDate) parts.push(`${startDate || '〜'} 〜 ${endDate || '本日'}`);
     if (searchTerm) parts.push(`検索「${searchTerm}」`);
-    return parts.length > 0 ? parts.join(' / ') : '全報告一覧';
-  }, [selectedYearMonth, startDate, endDate, searchTerm]);
+    return parts.length > 0 ? parts.join(' / ') : '全報告一覧（全事業所）';
+  }, [selectedFacility, selectedYearMonth, startDate, endDate, searchTerm]);
 
   return (
     <div className="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden space-y-4 p-4 sm:p-5">
@@ -129,7 +148,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({
       <div className="space-y-3 pb-3 border-b border-slate-100">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5">
           {/* Search Bar */}
-          <div className="md:col-span-4 relative">
+          <div className="md:col-span-3 relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -138,6 +157,22 @@ export const ReportTable: React.FC<ReportTableProps> = ({
               placeholder="利用者名・キーワード・状況で検索..."
               className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:bg-white focus:ring-2 focus:ring-amber-500 font-medium"
             />
+          </div>
+
+          {/* Facility Dropdown */}
+          <div className="md:col-span-3">
+            <select
+              value={selectedFacility}
+              onChange={(e) => setSelectedFacility(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl bg-indigo-50/70 border border-indigo-200 text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+            >
+              <option value="all">すべての事業所（全施設合同）</option>
+              {FACILITY_BRANCH_OPTIONS.map((branch) => (
+                <option key={branch} value={branch}>
+                  {branch}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Year-Month Dropdown */}
@@ -161,7 +196,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({
           </div>
 
           {/* Date Range Picker (任意期間) */}
-          <div className="md:col-span-3 flex items-center gap-1">
+          <div className="md:col-span-2 flex items-center gap-1">
             <input
               type="date"
               value={startDate}
@@ -185,16 +220,16 @@ export const ReportTable: React.FC<ReportTableProps> = ({
             />
           </div>
 
-          {/* Type Filter */}
-          <div className="md:col-span-3 flex gap-1">
+          {/* Type & Location Filter */}
+          <div className="md:col-span-2 flex gap-1">
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
               className="w-1/2 px-2 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold"
             >
-              <option value="all">種別: すべて</option>
-              <option value="hiyari">ヒヤリハット</option>
-              <option value="accident">事故報告</option>
+              <option value="all">種別: 全て</option>
+              <option value="hiyari">ヒヤリ</option>
+              <option value="accident">事故</option>
             </select>
 
             <select
@@ -202,7 +237,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({
               onChange={(e) => setFilterLocation(e.target.value)}
               className="w-1/2 px-2 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold"
             >
-              <option value="all">場所: すべて</option>
+              <option value="all">場所: 全て</option>
               {LOCATION_OPTIONS.map((loc) => (
                 <option key={loc} value={loc}>
                   {loc}
@@ -216,11 +251,12 @@ export const ReportTable: React.FC<ReportTableProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
           <div className="flex items-center gap-2 text-slate-500 font-semibold">
             <span>該当件数: <strong className="text-slate-900 font-meiryo-num text-sm font-bold">{filteredReports.length}</strong> 件</span>
-            {(searchTerm || selectedYearMonth !== 'all' || startDate || endDate || filterType !== 'all') && (
+            {(searchTerm || selectedFacility !== 'all' || selectedYearMonth !== 'all' || startDate || endDate || filterType !== 'all') && (
               <button
                 type="button"
                 onClick={() => {
                   setSearchTerm('');
+                  setSelectedFacility('all');
                   setSelectedYearMonth('all');
                   setStartDate('');
                   setEndDate('');
@@ -228,7 +264,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({
                   setFilterLocation('all');
                   setFilterStatus('all');
                 }}
-                className="text-amber-600 hover:underline font-bold"
+                className="text-amber-600 hover:underline font-bold cursor-pointer"
               >
                 フィルター解除
               </button>
@@ -264,6 +300,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({
           <thead>
             <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
               <th className="py-2.5 px-3">種別</th>
+              <th className="py-2.5 px-3">事業所</th>
               <th
                 className="py-2.5 px-3 cursor-pointer hover:text-slate-900"
                 onClick={() => {
@@ -291,13 +328,15 @@ export const ReportTable: React.FC<ReportTableProps> = ({
           <tbody className="divide-y divide-slate-100 font-medium">
             {filteredReports.length === 0 ? (
               <tr>
-                <td colSpan={9} className="py-8 text-center text-slate-400">
+                <td colSpan={10} className="py-8 text-center text-slate-400">
                   条件に該当する報告書は見つかりませんでした
                 </td>
               </tr>
             ) : (
               filteredReports.map((report) => {
                 const isHiyari = report.type === 'hiyari';
+                const branchName = report.facilityBranch || FACILITY_BRANCH_OPTIONS[0];
+
                 return (
                   <tr
                     key={report.id}
@@ -305,7 +344,7 @@ export const ReportTable: React.FC<ReportTableProps> = ({
                     onClick={() => onSelectReport(report)}
                   >
                     {/* 種別 */}
-                    <td className="py-3 px-3">
+                    <td className="py-3 px-3 whitespace-nowrap">
                       <span
                         className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[11px] font-black ${
                           isHiyari
@@ -314,6 +353,14 @@ export const ReportTable: React.FC<ReportTableProps> = ({
                         }`}
                       >
                         {isHiyari ? 'ヒヤリ' : '事故'}
+                      </span>
+                    </td>
+
+                    {/* 事業所 (黄緑・ピンク・ブルー) */}
+                    <td className="py-3 px-3 whitespace-nowrap">
+                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold border ${getFacilityBadgeStyle(branchName)}`}>
+                        <Building2 className="w-2.5 h-2.5" />
+                        <span>{getFacilityShortName(branchName)}</span>
                       </span>
                     </td>
 

@@ -533,6 +533,7 @@ export function exportReportsAsJSON(reports: Report[], residents?: Resident[]) {
 export function exportReportsAsCSV(reports: Report[]) {
   const headers = [
     '管理ID',
+    '事業所',
     '種別',
     '報告日',
     '曜日',
@@ -565,6 +566,7 @@ export function exportReportsAsCSV(reports: Report[]) {
 
   const rows = reports.map((r) => [
     `"${r.id}"`,
+    `"${r.facilityBranch || 'サービス付き高齢者向け住宅桃の郷京都東山'}"`,
     `"${r.type === 'accident' ? '事故' : 'ヒヤリハット'}"`,
     `"${r.reportDate}"`,
     `"${r.dayOfWeek}"`,

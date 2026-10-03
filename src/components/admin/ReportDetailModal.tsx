@@ -14,7 +14,7 @@ import {
   Save,
   FolderDown
 } from 'lucide-react';
-import { Report, LOCATION_OPTIONS, SITUATION_CATEGORIES, CARE_LEVEL_OPTIONS } from '../../types/report';
+import { Report, LOCATION_OPTIONS, SITUATION_CATEGORIES, CARE_LEVEL_OPTIONS, FACILITY_BRANCH_OPTIONS } from '../../types/report';
 
 interface ReportDetailModalProps {
   report: Report | null;
@@ -117,6 +117,24 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
             <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
               基本情報
             </h3>
+            {/* 対象事業所 */}
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                対象・発生事業所
+              </label>
+              <select
+                value={formData.facilityBranch || FACILITY_BRANCH_OPTIONS[0]}
+                onChange={(e) => handleFieldChange('facilityBranch', e.target.value)}
+                className="w-full px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50/70 text-xs font-bold text-slate-900 focus:bg-white"
+              >
+                {FACILITY_BRANCH_OPTIONS.map((branch) => (
+                  <option key={branch} value={branch}>
+                    {branch}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-[11px] font-semibold text-slate-500 mb-1">

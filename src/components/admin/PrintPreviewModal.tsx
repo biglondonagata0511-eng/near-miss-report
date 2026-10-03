@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Printer, X, Download, FileText, CheckCircle, FolderDown } from 'lucide-react';
-import { Report } from '../../types/report';
+import { Report, getFacilityShortName } from '../../types/report';
 import { formatJapaneseDate, getDayOfWeekJapanese } from '../../lib/dateUtils';
 import { SaveDestinationModal } from './SaveDestinationModal';
 
@@ -117,12 +117,13 @@ export const PrintPreviewModal: React.FC<PrintPreviewModalProps> = ({
                   <thead>
                     <tr className="bg-slate-100 text-slate-700 border-b border-slate-300">
                       <th className="border border-slate-300 p-1.5 w-12 text-center">種別</th>
+                      <th className="border border-slate-300 p-1.5 w-28">事業所</th>
                       <th className="border border-slate-300 p-1.5 w-24">発生日</th>
                       <th className="border border-slate-300 p-1.5 w-24">利用者名</th>
                       <th className="border border-slate-300 p-1.5 w-20">場所</th>
                       <th className="border border-slate-300 p-1.5">状況・要因の概要</th>
                       <th className="border border-slate-300 p-1.5 w-20">報告者</th>
-                      <th className="border border-slate-300 p-1.5 w-16 text-center">確認</th>
+                      <th className="border border-slate-300 p-1.5 w-14 text-center">確認</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -134,6 +135,9 @@ export const PrintPreviewModal: React.FC<PrintPreviewModalProps> = ({
                           ) : (
                             <span className="text-amber-600">ヒヤリ</span>
                           )}
+                        </td>
+                        <td className="border border-slate-300 p-1.5 font-semibold text-[10px] text-slate-700">
+                          {getFacilityShortName(r.facilityBranch || 'サービス付き高齢者向け住宅桃の郷京都東山')}
                         </td>
                         <td className="border border-slate-300 p-1.5">
                           {r.occurrenceDate}
@@ -198,6 +202,14 @@ export const PrintPreviewModal: React.FC<PrintPreviewModalProps> = ({
                 {/* Table Layout */}
                 <table className="w-full border-collapse border border-slate-400 mb-4 text-xs">
                   <tbody>
+                    {/* Row 0: Facility Branch */}
+                    <tr className="border-b border-slate-400">
+                      <th className="bg-slate-100 p-2 w-24 font-bold border-r border-slate-400">事業所名</th>
+                      <td colSpan={5} className="p-2 font-bold text-slate-900 text-sm">
+                        {report.facilityBranch || 'サービス付き高齢者向け住宅桃の郷京都東山'}
+                      </td>
+                    </tr>
+
                     {/* Row 1: Resident basic info */}
                     <tr className="border-b border-slate-400">
                       <th className="bg-slate-100 p-2 w-24 font-bold border-r border-slate-400">利用者氏名</th>

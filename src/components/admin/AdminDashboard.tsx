@@ -16,9 +16,10 @@ import {
   CheckCircle2,
   FileSpreadsheet,
   FolderDown,
-  Printer
+  Printer,
+  Building2
 } from 'lucide-react';
-import { Report } from '../../types/report';
+import { Report, FACILITY_BRANCH_OPTIONS } from '../../types/report';
 
 interface AdminDashboardProps {
   reports: Report[];
@@ -30,18 +31,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   reports,
   onOpenPrintSummary,
 }) => {
-  // Period filter
+  // Period & Facility filter
+  const [selectedFacility, setSelectedFacility] = useState<string>('all');
   const [periodPreset, setPeriodPreset] = useState<'all' | 'thisMonth' | 'lastMonth' | 'last30'>('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
 
-  // Filter reports based on selected period
+  // Filter reports based on selected period & facility
   const filteredReports = useMemo(() => {
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth();
 
     return reports.filter((r) => {
+      // Facility filter
+      if (selectedFacility !== 'all') {
+        const branch = r.facilityBranch || FACILITY_BRANCH_OPTIONS[0];
+        if (branch !== selectedFacility) return false;
+      }
+
       if (!r.occurrenceDate) return true;
       const rDate = new Date(r.occurrenceDate);
 
@@ -65,7 +73,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       }
       return true;
     });
-  }, [reports, periodPreset, customStartDate, customEndDate]);
+  }, [reports, selectedFacility, periodPreset, customStartDate, customEndDate]);
 
   // Aggregate Metrics
   const totalCount = filteredReports.length;
@@ -165,23 +173,46 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       .sort((a, b) => b.count - a.count);
   }, [filteredReports]);
 
-  // Period label
+  // Period & Facility label for print summary
   const periodLabel = useMemo(() => {
-    if (periodPreset === 'thisMonth') return '今月（当月分）';
-    if (periodPreset === 'lastMonth') return '先月分';
-    if (periodPreset === 'last30') return '直近30日間';
-    if (customStartDate && customEndDate) return `${customStartDate} 〜 ${customEndDate}`;
-    return '全期間';
-  }, [periodPreset, customStartDate, customEndDate]);
+    let base = '全期間';
+    if (periodPreset === 'thisMonth') base = '今月（当月分）';
+    else if (periodPreset === 'lastMonth') base = '先月分';
+    else if (periodPreset === 'last30') base = '直近30日間';
+    else if (customStartDate && customEndDate) base = `${customStartDate} 〜 ${customEndDate}`;
+
+    if (selectedFacility !== 'all') {
+      return `【${selectedFacility}】 ${base}`;
+    }
+    return `【全事業所合同】 ${base}`;
+  }, [selectedFacility, periodPreset, customStartDate, customEndDate]);
 
   return (
     <div className="space-y-6">
       {/* Top Filter Bar */}
       <div className="bg-white p-4 rounded-2xl shadow-xs border border-slate-200 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-500" />
-          <span className="text-xs font-bold text-slate-700">集計対象期間：</span>
-          <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Facility Selector */}
+          <div className="flex items-center gap-1.5 bg-indigo-50/80 px-2.5 py-1.5 rounded-xl border border-indigo-200">
+            <Building2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <select
+              value={selectedFacility}
+              onChange={(e) => setSelectedFacility(e.target.value)}
+              className="bg-transparent text-xs font-bold text-slate-900 border-none focus:ring-0 p-0 pr-4 cursor-pointer"
+            >
+              <option value="all">すべての事業所（全施設合同）</option>
+              {FACILITY_BRANCH_OPTIONS.map((branch) => (
+                <option key={branch} value={branch}>
+                  {branch}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-slate-500" />
+            <span className="text-xs font-bold text-slate-700">期間：</span>
+            <div className="flex flex-wrap gap-1">
             {[
               { id: 'all', label: '全期間' },
               { id: 'thisMonth', label: '今月' },
@@ -205,6 +236,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 {p.label}
               </button>
             ))}
+            </div>
           </div>
         </div>
 

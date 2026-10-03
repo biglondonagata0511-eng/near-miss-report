@@ -1,5 +1,5 @@
 import React from 'react';
-import { Smartphone, Monitor, ShieldCheck, ShieldAlert, Wifi, Sparkles } from 'lucide-react';
+import { Smartphone, Monitor, ShieldCheck, ShieldAlert, Sparkles } from 'lucide-react';
 
 interface HeaderProps {
   viewMode: 'mobile' | 'admin';
@@ -31,10 +31,6 @@ export const Header: React.FC<HeaderProps> = ({
               <h1 className="text-base sm:text-lg font-bold text-slate-800 tracking-tight leading-tight">
                 スマホで簡単ヒヤリ報告
               </h1>
-              <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 gap-1">
-                <Wifi className="w-3 h-3 animate-pulse text-emerald-600" />
-                クラウド同期中
-              </span>
             </div>
             <p className="text-xs text-slate-500 hidden sm:block">
               介護現場向け ヒヤリハット・事故報告＆要因（人・物・環境）分析

@@ -17,6 +17,35 @@ export type ReportStatus = 'submitted' | 'reviewing' | 'resolved';
 
 export type SeverityLevel = 'level0' | 'level1' | 'level2' | 'level3';
 
+// 施設敷地内の3つの事業所定義
+export const FACILITY_BRANCH_OPTIONS = [
+  'サービス付き高齢者向け住宅桃の郷京都東山',
+  'ヘルパーステーション桃の郷京都東山',
+  'デイサービス桃の郷京都東山',
+] as const;
+
+export type FacilityBranch = typeof FACILITY_BRANCH_OPTIONS[number];
+
+// 事業所短縮表示名
+export const getFacilityShortName = (branch: string = ''): string => {
+  if (branch.includes('サービス付き') || branch.includes('サ高住')) return 'サービス付き住宅';
+  if (branch.includes('ヘルパー')) return 'ヘルパーステーション';
+  if (branch.includes('デイ')) return 'デイサービス';
+  return branch.replace('桃の郷京都東山', '') || branch;
+};
+
+// 事業所ごとの指定カラーバッジスタイル (黄緑・ピンク・ブルー)
+export const getFacilityBadgeStyle = (branch: string = ''): string => {
+  if (branch.includes('サービス付き') || branch.includes('サ高住')) {
+    return 'bg-lime-100 text-lime-900 border-lime-300';
+  }
+  if (branch.includes('ヘルパー')) {
+    return 'bg-pink-100 text-pink-900 border-pink-300';
+  }
+  // デイサービス
+  return 'bg-sky-100 text-sky-900 border-sky-300';
+};
+
 // 登録利用者マスター (Resident Profile)
 export interface Resident {
   id: string;
@@ -33,6 +62,7 @@ export interface Resident {
 export interface Report {
   id: string;
   type: ReportType; // ヒヤリハット or 事故
+  facilityBranch?: FacilityBranch | string; // 対象・発生事業所 (桃の郷京都東山 3事業所)
   residentName: string; // 利用者氏名
   gender?: Gender; // 性別 (女性/男性)
   birthDate?: string; // 生年月日 (YYYY-MM-DD)

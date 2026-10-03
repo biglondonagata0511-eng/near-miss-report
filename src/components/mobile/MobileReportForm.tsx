@@ -17,7 +17,8 @@ import {
   ChevronDown,
   ChevronUp,
   FileText,
-  X
+  X,
+  Building2
 } from 'lucide-react';
 import { PRESET_TEMPLATES, PresetTemplate } from '../../lib/presetTemplates';
 import { 
@@ -32,7 +33,10 @@ import {
   PERSONAL_FACTOR_SUGGESTIONS, 
   MATERIAL_FACTOR_SUGGESTIONS, 
   ENVIRONMENTAL_FACTOR_SUGGESTIONS, 
-  CARE_LEVEL_OPTIONS 
+  CARE_LEVEL_OPTIONS,
+  FACILITY_BRANCH_OPTIONS,
+  FacilityBranch,
+  getFacilityShortName
 } from '../../types/report';
 import { getTodayDateString, getDayOfWeekJapanese, calculateAgeFromBirthDate } from '../../lib/dateUtils';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
@@ -54,6 +58,7 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
 
   // Form states
   const [reportType, setReportType] = useState<ReportType>('hiyari');
+  const [facilityBranch, setFacilityBranch] = useState<FacilityBranch>(FACILITY_BRANCH_OPTIONS[0]);
   
   // 利用者選択・予測表示 states
   const [residentInput, setResidentInput] = useState('');
@@ -245,6 +250,7 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
     const newReport: Report = {
       id: `rep-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       type: reportType,
+      facilityBranch,
       residentName: residentInput.trim().replace(/[\s　]*様[\s　]*$/, ''),
       gender,
       birthDate: birthDate || undefined,
@@ -304,6 +310,7 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
     setEmergencyResponse('');
     setPreventiveMeasures('');
     setLocationDetail('');
+    setFacilityBranch(FACILITY_BRANCH_OPTIONS[0]);
     setShowSuccessModal(false);
   };
 
@@ -321,19 +328,14 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
   return (
     <div className="max-w-xl mx-auto pb-24 px-3 sm:px-4 pt-3 font-sans">
       {/* Top Banner / Type Selector */}
-      <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200 mb-4">
-        <div className="text-center mb-2.5">
-          <span className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
-            種別を選択（ワンタップ）
-          </span>
-        </div>
-        <div className="grid grid-cols-2 gap-2.5">
+      <div className="bg-white rounded-2xl p-2.5 sm:p-3 shadow-sm border border-slate-200 mb-3 sm:mb-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
           <button
             type="button"
             onClick={() => setReportType('hiyari')}
-            className={`py-3 px-3 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all border-2 ${
+            className={`py-2.5 sm:py-3 px-3 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all border-2 ${
               reportType === 'hiyari'
-                ? 'bg-amber-500 text-white border-amber-600 shadow-md shadow-amber-200 scale-[1.02]'
+                ? 'bg-amber-500 text-white border-amber-600 shadow-md shadow-amber-200 scale-[1.01]'
                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
             }`}
           >
@@ -343,9 +345,9 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
           <button
             type="button"
             onClick={() => setReportType('accident')}
-            className={`py-3 px-3 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all border-2 ${
+            className={`py-2.5 sm:py-3 px-3 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all border-2 ${
               reportType === 'accident'
-                ? 'bg-rose-500 text-white border-rose-600 shadow-md shadow-rose-200 scale-[1.02]'
+                ? 'bg-rose-500 text-white border-rose-600 shadow-md shadow-rose-200 scale-[1.01]'
                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
             }`}
           >
@@ -375,6 +377,60 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
           </div>
 
           <div className="space-y-3.5">
+            {/* 桃の郷京都東山 3事業所選択ボタン (明るい黄緑色 / 明るいピンク色 / 明るいブルー) */}
+            <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+              <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                <span className="flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-slate-600" />
+                  <span>対象・発生事業所</span>
+                </span>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+                {FACILITY_BRANCH_OPTIONS.map((branch) => {
+                  const isSelected = facilityBranch === branch;
+                  const shortLabel = getFacilityShortName(branch);
+
+                  let colorClasses = '';
+                  let dotColor = '';
+
+                  if (branch.includes('サービス付き') || branch.includes('サ高住')) {
+                    // サービス付き住宅：明るい黄緑色 (Lime / Bright Yellow-Green)
+                    colorClasses = isSelected
+                      ? 'bg-lime-400 text-slate-950 border-lime-500 shadow-sm ring-2 ring-lime-400 font-black'
+                      : 'bg-lime-50/80 text-lime-900 border-lime-300 hover:bg-lime-100';
+                    dotColor = isSelected ? 'bg-slate-950' : 'bg-lime-500';
+                  } else if (branch.includes('ヘルパー')) {
+                    // ヘルパーステーション：明るいピンク色 (Pink)
+                    colorClasses = isSelected
+                      ? 'bg-pink-400 text-slate-950 border-pink-500 shadow-sm ring-2 ring-pink-400 font-black'
+                      : 'bg-pink-50/80 text-pink-900 border-pink-300 hover:bg-pink-100';
+                    dotColor = isSelected ? 'bg-slate-950' : 'bg-pink-500';
+                  } else {
+                    // デイサービス：明るいブルー (Sky Blue)
+                    colorClasses = isSelected
+                      ? 'bg-sky-400 text-slate-950 border-sky-500 shadow-sm ring-2 ring-sky-400 font-black'
+                      : 'bg-sky-50/80 text-sky-900 border-sky-300 hover:bg-sky-100';
+                    dotColor = isSelected ? 'bg-slate-950' : 'bg-sky-500';
+                  }
+
+                  return (
+                    <button
+                      key={branch}
+                      type="button"
+                      onClick={() => setFacilityBranch(branch)}
+                      className={`py-2 px-2.5 rounded-xl text-xs transition-all border text-left flex items-center justify-between cursor-pointer ${colorClasses}`}
+                    >
+                      <div className="flex items-center gap-1.5 truncate">
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
+                        <span className="truncate">{shortLabel}</span>
+                      </div>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-slate-950 shrink-0 ml-1" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* 1. 利用者氏名 (約2/3) & 部屋番号 (約1/3弱) */}
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -775,7 +831,13 @@ export const MobileReportForm: React.FC<MobileReportFormProps> = ({
               <div className="space-y-2">
                 <select
                   value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  onChange={(e) => {
+                    const loc = e.target.value;
+                    setLocation(loc);
+                    if (loc === 'デイサービスフロア') {
+                      setFacilityBranch('デイサービス桃の郷京都東山');
+                    }
+                  }}
                   className="w-full h-11 px-3 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-bold text-slate-900 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 >
                   {LOCATION_OPTIONS.map((loc) => (

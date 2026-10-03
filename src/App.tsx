@@ -226,6 +226,7 @@ export default function App() {
                   setSelectedReportForDetail(rep);
                 }}
                 onNewReport={() => setMobileTab('form')}
+                onOpenPrintList={handleOpenPrintList}
               />
             )}
           </div>
